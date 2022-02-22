@@ -1,14 +1,18 @@
 import '../styles/globals.css';
 import type { AppProps } from 'next/app';
-import { ApolloProvider } from '@apollo/client';
-import client from '../apollo-client';
+import { ApolloProvider, useReactiveVar } from '@apollo/client';
+import client, { isLoggedInVar } from '../apollo-client';
 import NavBar from '../components/NavBar';
+import Login from '../components/Login';
 
 function MyApp({ Component, pageProps }: AppProps) {
+  const isLoggedIn = useReactiveVar(isLoggedInVar);
   return (
     <ApolloProvider client={client}>
-      <NavBar />
-      <Component {...pageProps} />
+      <div className="h-screen">
+        <NavBar />
+        {isLoggedIn ? <Component {...pageProps} /> : <Login />}
+      </div>
     </ApolloProvider>
   );
 }

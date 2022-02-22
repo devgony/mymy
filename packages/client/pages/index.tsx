@@ -1,81 +1,45 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
-import type { InferGetServerSidePropsType, NextPage } from 'next';
-import { useForm } from 'react-hook-form';
-import client from '../apollo-client';
-import {
-  LoginInput,
-  LoginMutation,
-  LoginMutationVariables,
-} from '../generated/graphql';
+import { gql, useQuery } from '@apollo/client';
+import { NextPage } from 'next';
+import { FindDbsOutput, FindDbsQuery } from '../generated/graphql';
 
-const LOGIN = gql`
-  mutation login($input: LoginInput!) {
-    login(input: $input) {
-      ok
-      token
-      error
+const FIND_DBS = gql`
+  query findDbs {
+    findDbs {
+      dbs {
+        name
+        host
+        port
+        schema
+        username
+        password
+      }
     }
   }
 `;
 
-const Home = ({
-  data,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
-  const { register, getValues, handleSubmit, formState } = useForm<LoginInput>({
-    mode: 'onChange',
-  });
-  const onCompleted = (data: LoginMutation) => {
-    const {
-      login: { ok, token, error },
-    } = data;
-    if (ok && token) {
-      console.log(token);
-    } else {
-      console.log(error);
-    }
-  };
-  const [login, { data: loginResult, loading }] = useMutation<
-    LoginMutation,
-    LoginMutationVariables
-  >(LOGIN, { onCompleted });
-  const onSubmit = () => {
-    const { username, password } = getValues();
-    console.log(username, password);
-    login({
-      variables: {
-        input: { username, password },
-      },
-    });
-  };
+const Home: NextPage = () => {
+  const { data, loading } = useQuery<FindDbsQuery>(FIND_DBS);
+  console.log(data);
   return (
-    <form className="flex flex-col w-20" onSubmit={handleSubmit(onSubmit)}>
-      <input placeholder="username" {...register('username')} />
-      <input placeholder="password" {...register('password')} />
-      <button>login</button>
-    </form>
+    <div className="flex h-full justify-center items-center">
+      <div className="bg-gray-300 h-1/2 w-2/3">
+        Connection List
+        <div className="grid grid-cols-6 text-center">
+          {['NAME', 'HOST', 'PORT', 'SCHEMA', 'USERNAME', 'PASSWORD'].map(
+            (v, i) => (
+              <span key={i}>{v}</span>
+            ),
+          )}
+          {data?.findDbs.dbs.map((db, i) =>
+            Object.entries(db).map(([k, v], j) => {
+              return k === '__typename' ? null : (
+                <span key={`${i}${j}`}>{v}</span>
+              );
+            }),
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
-
-export async function getServerSideProps() {
-  const { data } = await client.query({
-    query: gql`
-      query findDbs {
-        findDbs {
-          dbs {
-            id
-            password
-            name
-          }
-        }
-      }
-    `,
-  });
-
-  return {
-    props: {
-      data,
-    },
-  };
-}
-
 export default Home;
