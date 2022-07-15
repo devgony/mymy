@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "gen": "graphql-codegen --config codegen.yml"
+    "gen": "DEBUG=1 graphql-codegen --config codegen.yml"
   },
   "dependencies": {
     "@apollo/client": "^3.5.8",
