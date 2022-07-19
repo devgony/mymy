@@ -17,11 +17,11 @@ const NavBar: NextPage = () => {
         <a className="bg-yellow-300 ml-4 text-3xl">🐬MyMy🖐</a>
       </Link>
       <nav className="w-1/2 flex justify-around">
-        <Link href="/realtime">
-          <a>REALTIME</a>
+        <Link href="/">
+          <a>HEALTH CHECK</a>
         </Link>
-        <Link href="/history">
-          <a>HISTORY</a>
+        <Link href="/real-time">
+          <a>REAL TIME</a>
         </Link>
         <Link href="/admin">
           <a>ADMIN</a>
