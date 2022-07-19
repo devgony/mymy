@@ -3,11 +3,13 @@ import { DbsService } from './dbs.service';
 import { CreateDbInput, CreateDbOutput } from './dtos/create-db.dto';
 import { DeleteDbInput, DeleteDbOutput } from './dtos/delete-db.dto';
 import { FindDbsOutput } from './dtos/find-dbs.dto';
-import { TestDbInput, TestDbOuput } from './dtos/test-db.dto';
+import { FindDbStatsOutput } from './dtos/find-dbStats.dto';
+// import { HealthcheckInput, HealthcheckOutput } from './dtos/healthcheck.dto';
+import { TestDbInput, TestDbOutput } from './dtos/test-db.dto';
 
 @Resolver()
 export class DbsResolver {
-  constructor(private readonly dbsService: DbsService) {}
+  constructor(private readonly dbsService: DbsService) { }
 
   @Mutation(() => CreateDbOutput)
   async createDB(
@@ -28,8 +30,18 @@ export class DbsResolver {
     return this.dbsService.findDbs();
   }
 
-  @Query(() => TestDbOuput)
-  async testDb(@Args('input') testdbInput: TestDbInput): Promise<TestDbOuput> {
+  @Query(() => TestDbOutput)
+  async testDb(@Args('input') testdbInput: TestDbInput): Promise<TestDbOutput> {
     return this.dbsService.testDb(testdbInput);
   }
+
+  @Query(() => FindDbStatsOutput)
+  async findDbStats(): Promise<FindDbStatsOutput> {
+    return this.dbsService.findDbStats();
+  }
+
+  // @Query(() => HealthcheckOutput)
+  // async healthcheck(@Args('input') healthcheckInput: HealthcheckInput): Promise<HealthcheckOutput> {
+  //   return this.dbsService.healthcheck(healthcheckInput);
+  // }
 }

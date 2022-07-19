@@ -6,7 +6,9 @@ import { createConnection, Repository } from 'typeorm';
 import { CreateDbInput, CreateDbOutput } from './dtos/create-db.dto';
 import { DeleteDbInput, DeleteDbOutput } from './dtos/delete-db.dto';
 import { FindDbsOutput } from './dtos/find-dbs.dto';
-import { TestDbInput, TestDbOuput } from './dtos/test-db.dto';
+import { FindDbStatsOutput } from './dtos/find-dbStats.dto';
+// import { HealthcheckInput, HealthcheckOutput } from './dtos/healthcheck.dto';
+import { TestDbInput, TestDbOutput } from './dtos/test-db.dto';
 import { Db } from './entities/dbs.entity';
 
 @Injectable()
@@ -14,7 +16,7 @@ export class DbsService {
   constructor(
     @InjectRepository(Db)
     private readonly dbs: Repository<Db>,
-  ) {}
+  ) { }
 
   async createDB({
     name,
@@ -72,7 +74,7 @@ export class DbsService {
     schema,
     username,
     password,
-  }: TestDbInput): Promise<TestDbOuput> {
+  }: TestDbInput): Promise<TestDbOutput> {
     try {
       // const { host, port, database, username, password } =
       //   await this.Dbs.findOne({ where: { name } });
@@ -88,6 +90,7 @@ export class DbsService {
         username,
         password,
         database: schema,
+        connectTimeout: 500
       });
       if (!connection.isConnected) {
         return { ok: false, error: 'Connection failed' };
@@ -114,4 +117,36 @@ export class DbsService {
       return { ok: false, error: 'Could not delete DB' };
     }
   }
+
+  async findDbStats(): Promise<FindDbStatsOutput> {
+    try {
+      const dbs = await this.dbs.find();
+      if (!dbs) {
+        return { ok: false, error: 'db does not exist' }
+      }
+      const dbStats = await Promise.all(dbs.map(async db => {
+        const stat = await this.testDb(db);
+        return { ...db, stat: stat.ok ? 'Y' : 'N' }
+      }))
+      return { ok: true, dbStats }
+    } catch (error) {
+      errLog(__filename, error);
+      return { ok: false, error: 'Could not find db stats' };
+    }
+  }
+
+  // async healthcheck({ id }: HealthcheckInput): Promise<HealthcheckOutput> {
+  //   try {
+  //     const db = await this.dbs.findOne({ where: { id } })
+  //     if (!db) {
+  //       return { ok: false, error: 'Cannot find db' }
+  //     }
+  //     const { host, port, schema, username, password } = db;
+
+  //     return { ok: true, id }
+  //   } catch (error) {
+  //     errLog(__filename, error);
+  //     return { ok: false, error: 'Could not check health' };
+  //   }
+  // }
 }
