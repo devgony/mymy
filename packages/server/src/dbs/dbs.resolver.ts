@@ -1,15 +1,23 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Inject } from '@nestjs/common';
+import { Args, Mutation, Subscription, Query, Resolver } from '@nestjs/graphql';
+import { MONITOR_PERF, PUB_SUB } from 'src/common/common.constants';
+import { withCancel } from 'src/common/hooks/withCancel';
 import { DbsService } from './dbs.service';
 import { CreateDbInput, CreateDbOutput } from './dtos/create-db.dto';
 import { DeleteDbInput, DeleteDbOutput } from './dtos/delete-db.dto';
 import { FindDbsOutput } from './dtos/find-dbs.dto';
 import { FindDbStatsOutput } from './dtos/find-dbStats.dto';
+import { MonitorPerfInput, MonitorPerfOuput } from './dtos/monitor-perf.dto';
 // import { HealthcheckInput, HealthcheckOutput } from './dtos/healthcheck.dto';
 import { TestDbInput, TestDbOutput } from './dtos/test-db.dto';
+import { PubSub } from 'graphql-subscriptions';
+import { sqlPerf } from 'src/common/sqls';
 
 @Resolver()
 export class DbsResolver {
-  constructor(private readonly dbsService: DbsService) { }
+  constructor(private readonly dbsService: DbsService,
+    @Inject(PUB_SUB) private readonly pubSub: PubSub,
+  ) { }
 
   @Mutation(() => CreateDbOutput)
   async createDB(
@@ -38,6 +46,20 @@ export class DbsResolver {
   @Query(() => FindDbStatsOutput)
   async findDbStats(): Promise<FindDbStatsOutput> {
     return this.dbsService.findDbStats();
+  }
+
+  @Subscription((_) => MonitorPerfOuput)
+  async monitorPerf(@Args('input') monitorPerfInput: MonitorPerfInput) {
+    const { interval, connection } = await this.dbsService.startMonitor(
+      MONITOR_PERF,
+      monitorPerfInput,
+      sqlPerf,
+    );
+    return withCancel(this.pubSub.asyncIterator(MONITOR_PERF), () => {
+      console.log('cleared');
+      clearInterval(interval);
+      // connection.close();
+    });
   }
 
   // @Query(() => HealthcheckOutput)

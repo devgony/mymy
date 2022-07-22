@@ -1,21 +1,26 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PubSub } from 'graphql-subscriptions';
+import { MONITOR_INTERVAL, PUB_SUB } from 'src/common/common.constants';
 import { errLog } from 'src/common/hooks/errLog';
 import { getErrorMessage } from 'src/common/hooks/getErrorMessage';
-import { createConnection, Repository } from 'typeorm';
+import { createConnection, getConnectionManager, Repository } from 'typeorm';
 import { CreateDbInput, CreateDbOutput } from './dtos/create-db.dto';
 import { DeleteDbInput, DeleteDbOutput } from './dtos/delete-db.dto';
 import { FindDbsOutput } from './dtos/find-dbs.dto';
 import { FindDbStatsOutput } from './dtos/find-dbStats.dto';
+import { MonitorPerfInput } from './dtos/monitor-perf.dto';
 // import { HealthcheckInput, HealthcheckOutput } from './dtos/healthcheck.dto';
 import { TestDbInput, TestDbOutput } from './dtos/test-db.dto';
 import { Db } from './entities/dbs.entity';
+
 
 @Injectable()
 export class DbsService {
   constructor(
     @InjectRepository(Db)
     private readonly dbs: Repository<Db>,
+    @Inject(PUB_SUB) private readonly pubSub: PubSub,
   ) { }
 
   async createDB({
@@ -149,4 +154,62 @@ export class DbsService {
   //     return { ok: false, error: 'Could not check health' };
   //   }
   // }
+
+
+  async startMonitor(
+    subscriptionName: string,
+    { name }: MonitorPerfInput,
+    query: string,
+  ) {
+    const connection = await this.openConnection({ name });
+    const interval = setInterval(async () => {
+      const result = await connection.query(query);
+      let data;
+      if (subscriptionName === 'monitorPerf') {
+        const currentTime = new Date().toString().split(' ')[4];
+        data = { currentTime, ...result[0] };
+      } else {
+        data = { monitorSessionsRows: result };
+        // console.log(data);
+      }
+      this.pubSub.publish(subscriptionName, {
+        [subscriptionName]: data,
+      });
+    }, MONITOR_INTERVAL);
+    return { interval, connection };
+  }
+
+  async openConnection({ name }: MonitorPerfInput) {
+    try {
+      const { host, port, schema, username, password } =
+        await this.dbs.findOne({ where: { name } });
+      if (!host) {
+        new Error('Could not find link');
+      }
+      // do sth
+      const connectionManager = getConnectionManager();
+      if (connectionManager.has(name)) {
+        const connection = connectionManager.get(name);
+        console.log('reuse');
+        return Promise.resolve(
+          connection.isConnected ? connection : connection.connect(),
+        );
+      }
+      const connection = await createConnection({
+        type: 'mysql',
+        name,
+        host,
+        port,
+        username,
+        password,
+        database: schema,
+        connectTimeout: 500
+      });
+
+      console.log('newConnection');
+      return connection;
+    } catch (error) {
+      errLog(__filename, error);
+    }
+  }
 }
