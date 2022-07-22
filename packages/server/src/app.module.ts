@@ -8,6 +8,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { JwtModule } from './jwt/jwt.module';
 import { DbsModule } from './dbs/dbs.module';
 import { Db } from './dbs/entities/dbs.entity';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -52,8 +53,9 @@ import { Db } from './dbs/entities/dbs.entity';
     }),
     UsersModule,
     DbsModule,
+    CommonModule
   ],
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }
