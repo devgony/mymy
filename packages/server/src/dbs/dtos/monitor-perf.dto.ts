@@ -6,6 +6,9 @@ export class MonitorPerfInput extends PickType(Db, ['name']) { }
 
 @ObjectType()
 export class MonitorPerfOuput {
+  @Field((_) => String)
+  currentTime: string;
+
   @Field(() => Number)
   Innodb_buffer_pool_reads: number;
 
