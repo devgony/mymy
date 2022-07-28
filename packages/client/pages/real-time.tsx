@@ -1,3 +1,5 @@
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
 import {
   VictoryArea,
   VictoryChart,
@@ -5,12 +7,14 @@ import {
 } from "victory";
 import { gql, useSubscription } from "@apollo/client";
 import { NextPage } from "next"
-import { useEffect, useState } from "react";
-import { MonitorPerfOuput, MonitorPerfSubscription, MonitorPerfSubscriptionVariables } from "../generated/graphql";
+import { useEffect, useMemo, useState } from "react";
+import { MonitorPerfOuput, MonitorPerfSubscription, MonitorPerfSubscriptionVariables, MonitorSessionsSubscription, MonitorSessionsSubscriptionVariables } from "../generated/graphql";
+import { AgGridReact } from "ag-grid-react";
 
 const MONITOR_PERF = gql`
   subscription monitorPerf($input: MonitorPerfInput!) {
     monitorPerf(input: $input) {
+      currentTime
       Innodb_buffer_pool_reads
       Bytes_sent
       Threads_connected
@@ -21,13 +25,61 @@ const MONITOR_PERF = gql`
   }
 `;
 
+const MONITOR_SESSIONS = gql`
+  subscription monitorSessions($input: MonitorSessionsInput!) {
+    monitorSessions(input: $input) {
+      sessions {
+        id
+        holder
+        thread_id
+        user
+        host
+        db
+        elapsed_time
+        wait_time
+        event_id
+        event_name
+        sqltext
+        command
+        state
+        source
+        spins
+        object_schema
+        object_name
+        object_type
+        object_instance_begin
+        operation
+        number_of_bytes
+        process_id
+      }
+    }
+  }
+`;
+
 const HEADERS = [
-  "Innodb_buffer_pool_reads"
-  , "Bytes_sent"
-  , "Threads_connected"
-  , "Threads_running"
-  , "Innodb_row_lock_waits"
-  , "Innodb_rows_updated"
+  "id",
+  "holder",
+  "thread_id",
+  "user",
+  "host",
+  "db",
+  "elapsed_time",
+  "wait_time",
+  "event_id",
+  "event_name",
+  "sqltext",
+  "command",
+  "state",
+  "source",
+  "spins",
+  "object_schema",
+  "object_name",
+  "object_type",
+  "object_instance_begin",
+  "operation",
+  "number_of_bytes",
+  "process_id",
+
 ]
 
 type IChartData = {
@@ -54,6 +106,11 @@ const RealTime: NextPage = () => {
     MONITOR_PERF,
     { variables: { input: { name } } }
   );
+
+
+  const { data: dataSessions } = useSubscription<MonitorSessionsSubscription, MonitorSessionsSubscriptionVariables>
+    (MONITOR_SESSIONS, { variables: { input: { name } } });
+
   useEffect(() => {
     // console.log("workd")
     if (data) {
@@ -88,6 +145,16 @@ const RealTime: NextPage = () => {
       (data.reduce((acc, cur) => (acc < cur.y ? cur.y : acc), 0) + 1) * 1.5;
     return max < 10 ? 10 : max;
   };
+
+  const headers = HEADERS.map(header => ({ field: header }));
+  const [columnDefs, setColumnDefs] = useState(headers);
+  const defaultColDef = useMemo(() => ({
+    resizable: true,
+    filter: true,
+    sortable: true,
+    width: 150
+  }), []);
+
   return (
     <div className="h-full">
       {/* <Helmet> */}
@@ -109,6 +176,20 @@ const RealTime: NextPage = () => {
             </VictoryChart>
           </div>
         ))}
+      </div>
+
+      <div className="mt-2 ag-theme-alpine" style={{ height: 600, width: '100%' }}>
+        <AgGridReact
+          // ref={gridRef} // Ref for accessing Grid's API
+          rowData={dataSessions?.monitorSessions.sessions} // Row Data for Rows
+          columnDefs={columnDefs} // Column Defs for Columns
+          defaultColDef={defaultColDef} // Default Column Properties
+          animateRows={true} // Optional - set to 'true' to have rows animate when sorted
+        // rowSelection='multiple' // Options - allows click selection of rows
+        // ref={gridRef}
+        // onSelectionChanged={onSelectionChanged}
+        // onCellClicked={cellClickedListener} // Optional - registering for Grid Event
+        />
       </div>
     </div>
   )
