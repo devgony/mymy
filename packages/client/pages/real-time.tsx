@@ -1,3 +1,8 @@
+import {
+  VictoryArea,
+  VictoryChart,
+  VictoryContainer,
+} from "victory";
 import { gql, useSubscription } from "@apollo/client";
 import { NextPage } from "next"
 import { useEffect, useState } from "react";
@@ -6,7 +11,6 @@ import { MonitorPerfOuput, MonitorPerfSubscription, MonitorPerfSubscriptionVaria
 const MONITOR_PERF = gql`
   subscription monitorPerf($input: MonitorPerfInput!) {
     monitorPerf(input: $input) {
-      currentTime
       Innodb_buffer_pool_reads
       Bytes_sent
       Threads_connected
@@ -16,6 +20,15 @@ const MONITOR_PERF = gql`
     }
   }
 `;
+
+const HEADERS = [
+  "Innodb_buffer_pool_reads"
+  , "Bytes_sent"
+  , "Threads_connected"
+  , "Threads_running"
+  , "Innodb_row_lock_waits"
+  , "Innodb_rows_updated"
+]
 
 type IChartData = {
   [key in keyof Omit<MonitorPerfOuput, "__typename" | "currentTime">]: [
@@ -41,9 +54,8 @@ const RealTime: NextPage = () => {
     MONITOR_PERF,
     { variables: { input: { name } } }
   );
-  console.log(data, error, loading);
   useEffect(() => {
-    console.log("workd")
+    // console.log("workd")
     if (data) {
       const input = data.monitorPerf;
       setChartData(prev => {
@@ -64,13 +76,40 @@ const RealTime: NextPage = () => {
           ) as IChartData;
         return newData;
       });
-      console.log(chartData, error);
+      // console.log(chartData, error);
     }
   }, [data]);
+  const getMin = (data: { x: string; y: number }[]) => {
+    return data.reduce((acc, cur) => (acc > cur.y ? cur.y : acc), 0);
+  };
+
+  const getMax = (data: { x: string; y: number }[]) => {
+    const max =
+      (data.reduce((acc, cur) => (acc < cur.y ? cur.y : acc), 0) + 1) * 1.5;
+    return max < 10 ? 10 : max;
+  };
   return (
-    <div>
-      <h1>realtime</h1>
-      <h1>{JSON.stringify(data)}</h1>
+    <div className="h-full">
+      {/* <Helmet> */}
+      {/*   <title>{`Dashboard | ${TITLE}`}</title> */}
+      {/* </Helmet> */}
+      <div className="bg-gray-500 grid grid-cols-3 gap-0.5 text-xs">
+        {Object.entries(chartData).map(([k, v]) => (
+          <div key={k} className="bg-red-50 flex flex-col items-center">
+            <h2>{k}</h2>
+            <VictoryChart
+              domain={{ y: [getMin(v), getMax(v)] }}
+              height={window.outerWidth > 1024 ? 200 : 320}
+              containerComponent={<VictoryContainer title="testdsfdf" />}
+            >
+              <VictoryArea
+                data={v}
+                style={{ data: { fill: "lightblue", stroke: "teal" } }}
+              />
+            </VictoryChart>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
