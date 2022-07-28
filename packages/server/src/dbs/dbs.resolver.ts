@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
 import { Args, Mutation, Subscription, Query, Resolver } from '@nestjs/graphql';
-import { MONITOR_PERF, PUB_SUB } from 'src/common/common.constants';
+import { MONITOR_PERF, MONITOR_SESSIONS, PUB_SUB } from 'src/common/common.constants';
 import { withCancel } from 'src/common/hooks/withCancel';
 import { DbsService } from './dbs.service';
 import { CreateDbInput, CreateDbOutput } from './dtos/create-db.dto';
@@ -11,7 +11,8 @@ import { MonitorPerfInput, MonitorPerfOuput } from './dtos/monitor-perf.dto';
 // import { HealthcheckInput, HealthcheckOutput } from './dtos/healthcheck.dto';
 import { TestDbInput, TestDbOutput } from './dtos/test-db.dto';
 import { PubSub } from 'graphql-subscriptions';
-import { sqlPerf } from 'src/common/sqls';
+import { sqlPerf, sqlSessions } from 'src/common/sqls';
+import { MonitorSessionsInput, MonitorSessionsOutput } from './dtos/monitor-sessions.dto';
 
 @Resolver()
 export class DbsResolver {
@@ -57,6 +58,22 @@ export class DbsResolver {
     );
     return withCancel(this.pubSub.asyncIterator(MONITOR_PERF), () => {
       console.log('cleared');
+      clearInterval(interval);
+      // connection.close();
+    });
+  }
+
+  @Subscription((_) => MonitorSessionsOutput)
+  async monitorSessions(
+    @Args('input') monitorSessionsInput: MonitorSessionsInput,
+  ) {
+    const { interval, connection } = await this.dbsService.startMonitor(
+      MONITOR_SESSIONS,
+      monitorSessionsInput,
+      // process.env.mode === 'prod' ? PROD_activeSessionQ : activeSessionQ,
+      sqlSessions,
+    );
+    return withCancel(this.pubSub.asyncIterator(MONITOR_SESSIONS), () => {
       clearInterval(interval);
       // connection.close();
     });

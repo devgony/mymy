@@ -169,7 +169,7 @@ export class DbsService {
         const currentTime = new Date().toString().split(' ')[4];
         data = { currentTime, ...result[0] };
       } else {
-        data = { monitorSessionsRows: result };
+        data = { sessions: result };
         // console.log(data);
       }
       this.pubSub.publish(subscriptionName, {
