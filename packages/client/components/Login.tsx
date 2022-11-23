@@ -49,23 +49,29 @@ const Login: NextPage = () => {
     });
   };
   return (
-    <div className="h-full flex justify-center items-center">
+    <div className="h-full flex justify-center items-center ">
       <form
-        className="flex flex-col h-48 w-80 bg-gray-200 items-center justify-around"
+        className="flex flex-col w-80 h-64 shadow-2xl rounded-b-lg"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <h1>Please Login with admin</h1>
-        <input
-          className="h-10"
-          placeholder="username"
-          {...register('username')}
-        />
-        <input
-          className="h-10"
-          placeholder="password"
-          {...register('password')}
-        />
-        <button className="btn">login</button>
+        <h1 className="text-center bg-violet-400 h-12 flex flex-col justify-center text-white rounded-t-lg">
+          Please Login with admin
+        </h1>
+        <div className="flex flex-col m-4 h-2/3 justify-around">
+          <input
+            className="h-10 pl-2 rounded-lg bg-gray-200"
+            placeholder="username"
+            {...register('username')}
+          />
+          <input
+            className="h-10 pl-2 rounded-lg bg-gray-200"
+            placeholder="password"
+            {...register('password')}
+          />
+          <button className="bg-violet-400 h-10 rounded-lg text-white">
+            Login
+          </button>
+        </div>
       </form>
     </div>
   );
