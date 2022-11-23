@@ -1,50 +1,25 @@
-import { gql, useQuery, useReactiveVar } from '@apollo/client';
 import { NextPage } from 'next';
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import { isLoggedInVar } from '../apollo-client';
-import { FindDbStatsQuery } from '../generated/graphql';
-
-const FIND_DB_STATS = gql`
-  query findDbStats {
-    findDbStats {
-      dbStats {
-        name
-        host
-        port
-        schema
-        username
-        password
-        stat
-      }
-    }
-  }
-`;
 
 const Home: NextPage = () => {
-  const { data, loading } = useQuery<FindDbStatsQuery>(FIND_DB_STATS);
-  // const [stat, setStat] = useState("Y");
-  // const { data: dataCheck, refetch } = useQuery<>();
   return (
-    <div className="flex h-full justify-center items-center">
-      <div className="bg-gray-300 h-1/2 w-2/3">
-        Connection List
-        <div className="grid grid-cols-7 text-center">
-          {['NAME', 'HOST', 'PORT', 'SCHEMA', 'USERNAME', 'PASSWORD', 'STAT'].map(
-            (v, i) => (
-              <span key={i}>{v}</span>
-            ),
-          )}
-          {data?.findDbStats.dbStats?.map((db, i) =>
-            Object.entries(db).map(([k, v], j) => {
-              return k === '__typename' ? null : (
-                <span key={`${i}${j}`}>{v}</span>
-              );
-            })
-          )
-          }
+    <div className="flex w-full mt-24 justify-around text-center">
+      <section className="w-1/3 h-24">
+        <div className="bg-violet-400 w-full rounded-t-lg text-gray-100">
+          HealthCheck
         </div>
-      </div>
+        <div className="bg-gray-200 h-full rounded-b-lg flex flex-col justify-center shadow-2xl">
+          <p>Good: 10</p>
+          <p>Bad: 1</p>
+        </div>
+      </section>
+      <section className="w-1/3 h-24">
+        <div className="bg-violet-400 w-full rounded-t-lg text-gray-100">
+          RealTime
+        </div>
+        <div className="bg-gray-200 h-full rounded-b-lg flex flex-col justify-center shadow-2xl">
+          <p>current: chooseDB</p>
+        </div>
+      </section>
     </div>
   );
 };

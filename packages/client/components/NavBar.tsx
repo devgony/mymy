@@ -12,7 +12,7 @@ const NavBar: NextPage = () => {
     isLoggedInVar(false);
   };
   return (
-    <div className="w-full flex h-12 justify-between items-center bg-violet-400 text-white font-bold">
+    <div className="w-full flex h-12 justify-between items-center bg-violet-400 text-gray-100 font-bold">
       <Link href="/">
         <a className="ml-4 text-xl">🐬MyMy🖐</a>
       </Link>
@@ -20,12 +20,12 @@ const NavBar: NextPage = () => {
         <Link href="/health-check">
           <a>HEALTH CHECK</a>
         </Link>
-        {/* <Link href="/real-time"> */}
-        {/*   <a>REAL TIME</a> */}
-        {/* </Link> */}
-        <Link href="/admin">
-          <a>ADMIN</a>
+        <Link href="/real-time">
+          <a>REAL TIME</a>
         </Link>
+        {/* <Link href="/admin"> */}
+        {/*   <a>ADMIN</a> */}
+        {/* </Link> */}
         {isLoggedIn ? (
           <button className="font-bold" onClick={logout}>
             LOGOUT
