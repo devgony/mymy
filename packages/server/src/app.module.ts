@@ -53,7 +53,7 @@ import { CommonModule } from './common/common.module';
     }),
     UsersModule,
     DbsModule,
-    CommonModule
+    CommonModule,
   ],
   controllers: [],
   providers: [],
