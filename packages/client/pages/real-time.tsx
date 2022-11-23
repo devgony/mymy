@@ -1,15 +1,17 @@
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
+import { VictoryArea, VictoryChart, VictoryContainer } from 'victory';
+import { gql, useSubscription } from '@apollo/client';
+import { NextPage } from 'next';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  VictoryArea,
-  VictoryChart,
-  VictoryContainer,
-} from "victory";
-import { gql, useSubscription } from "@apollo/client";
-import { NextPage } from "next"
-import { useEffect, useMemo, useState } from "react";
-import { MonitorPerfOuput, MonitorPerfSubscription, MonitorPerfSubscriptionVariables, MonitorSessionsSubscription, MonitorSessionsSubscriptionVariables } from "../generated/graphql";
-import { AgGridReact } from "ag-grid-react";
+  MonitorPerfOuput,
+  MonitorPerfSubscription,
+  MonitorPerfSubscriptionVariables,
+  MonitorSessionsSubscription,
+  MonitorSessionsSubscriptionVariables,
+} from '../generated/graphql';
+import { AgGridReact } from 'ag-grid-react';
 
 const MONITOR_PERF = gql`
   subscription monitorPerf($input: MonitorPerfInput!) {
@@ -57,40 +59,39 @@ const MONITOR_SESSIONS = gql`
 `;
 
 const HEADERS = [
-  "id",
-  "holder",
-  "thread_id",
-  "user",
-  "host",
-  "db",
-  "elapsed_time",
-  "wait_time",
-  "event_id",
-  "event_name",
-  "sqltext",
-  "command",
-  "state",
-  "source",
-  "spins",
-  "object_schema",
-  "object_name",
-  "object_type",
-  "object_instance_begin",
-  "operation",
-  "number_of_bytes",
-  "process_id",
-
-]
+  'id',
+  'holder',
+  'thread_id',
+  'user',
+  'host',
+  'db',
+  'elapsed_time',
+  'wait_time',
+  'event_id',
+  'event_name',
+  'sqltext',
+  'command',
+  'state',
+  'source',
+  'spins',
+  'object_schema',
+  'object_name',
+  'object_type',
+  'object_instance_begin',
+  'operation',
+  'number_of_bytes',
+  'process_id',
+];
 
 type IChartData = {
-  [key in keyof Omit<MonitorPerfOuput, "__typename" | "currentTime">]: [
-    { x: string, y: number }
-  ]
+  [key in keyof Omit<MonitorPerfOuput, '__typename' | 'currentTime'>]: [
+    { x: string; y: number },
+  ];
 };
 
 const RealTime: NextPage = () => {
-  const initData = Array(5).fill({ x: "00:00:00", y: 0 }) as [
-    { x: string; y: number }
+  const initData = Array(5).fill({ x: '00:00:00', y: 0 }) as [
+    { x: string; y: number },
   ];
   const [chartData, setChartData] = useState<IChartData>({
     Innodb_buffer_pool_reads: initData,
@@ -102,14 +103,15 @@ const RealTime: NextPage = () => {
   });
 
   const name = 'mysql1';
-  const { data, error, loading } = useSubscription<MonitorPerfSubscription, MonitorPerfSubscriptionVariables>(
-    MONITOR_PERF,
-    { variables: { input: { name } } }
-  );
+  const { data, error, loading } = useSubscription<
+    MonitorPerfSubscription,
+    MonitorPerfSubscriptionVariables
+  >(MONITOR_PERF, { variables: { input: { name } } });
 
-
-  const { data: dataSessions } = useSubscription<MonitorSessionsSubscription, MonitorSessionsSubscriptionVariables>
-    (MONITOR_SESSIONS, { variables: { input: { name } } });
+  const { data: dataSessions } = useSubscription<
+    MonitorSessionsSubscription,
+    MonitorSessionsSubscriptionVariables
+  >(MONITOR_SESSIONS, { variables: { input: { name } } });
 
   useEffect(() => {
     // console.log("workd")
@@ -129,7 +131,7 @@ const RealTime: NextPage = () => {
           })
           .reduce(
             (acc, { k, v }) => ({ ...acc, [k]: [...v] }),
-            {}
+            {},
           ) as IChartData;
         return newData;
       });
@@ -148,12 +150,15 @@ const RealTime: NextPage = () => {
 
   const headers = HEADERS.map(header => ({ field: header }));
   const [columnDefs, setColumnDefs] = useState(headers);
-  const defaultColDef = useMemo(() => ({
-    resizable: true,
-    filter: true,
-    sortable: true,
-    width: 150
-  }), []);
+  const defaultColDef = useMemo(
+    () => ({
+      resizable: true,
+      filter: true,
+      sortable: true,
+      width: 150,
+    }),
+    [],
+  );
 
   return (
     <div className="h-full">
@@ -171,27 +176,30 @@ const RealTime: NextPage = () => {
             >
               <VictoryArea
                 data={v}
-                style={{ data: { fill: "lightblue", stroke: "teal" } }}
+                style={{ data: { fill: 'lightblue', stroke: 'teal' } }}
               />
             </VictoryChart>
           </div>
         ))}
       </div>
 
-      <div className="mt-2 ag-theme-alpine" style={{ height: 600, width: '100%' }}>
+      <div
+        className="mt-2 ag-theme-alpine"
+        style={{ height: 600, width: '100%' }}
+      >
         <AgGridReact
           // ref={gridRef} // Ref for accessing Grid's API
           rowData={dataSessions?.monitorSessions.sessions} // Row Data for Rows
           columnDefs={columnDefs} // Column Defs for Columns
           defaultColDef={defaultColDef} // Default Column Properties
           animateRows={true} // Optional - set to 'true' to have rows animate when sorted
-        // rowSelection='multiple' // Options - allows click selection of rows
-        // ref={gridRef}
-        // onSelectionChanged={onSelectionChanged}
-        // onCellClicked={cellClickedListener} // Optional - registering for Grid Event
+          // rowSelection='multiple' // Options - allows click selection of rows
+          // ref={gridRef}
+          // onSelectionChanged={onSelectionChanged}
+          // onCellClicked={cellClickedListener} // Optional - registering for Grid Event
         />
       </div>
     </div>
-  )
-}
-export default RealTime
+  );
+};
+export default RealTime;
