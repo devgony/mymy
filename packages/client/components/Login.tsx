@@ -66,6 +66,7 @@ const Login: NextPage = () => {
           <input
             className="h-10 pl-2 rounded-lg bg-gray-200"
             placeholder="password"
+            type="password"
             {...register('password')}
           />
           <button className="bg-violet-400 h-10 rounded-lg text-white">

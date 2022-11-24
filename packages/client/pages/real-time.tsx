@@ -1,7 +1,7 @@
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
 import { VictoryArea, VictoryChart, VictoryContainer } from 'victory';
-import { gql, useSubscription } from '@apollo/client';
+import { gql, useReactiveVar, useSubscription } from '@apollo/client';
 import { NextPage } from 'next';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -12,6 +12,8 @@ import {
   MonitorSessionsSubscriptionVariables,
 } from '../generated/graphql';
 import { AgGridReact } from 'ag-grid-react';
+import { useRouter } from 'next/router';
+import { goToRealTime } from '../utils/goToRealTime';
 
 const MONITOR_PERF = gql`
   subscription monitorPerf($input: MonitorPerfInput!) {
@@ -90,6 +92,16 @@ type IChartData = {
 };
 
 const RealTime: NextPage = () => {
+  const targetDb = localStorage.getItem('targetDb');
+  const router = useRouter();
+  useEffect(() => {
+    if (!targetDb) {
+      alert('Choose target db first');
+      router.push({
+        pathname: '/health-check',
+      });
+    }
+  }, []);
   const initData = Array(5).fill({ x: '00:00:00', y: 0 }) as [
     { x: string; y: number },
   ];
@@ -102,7 +114,7 @@ const RealTime: NextPage = () => {
     Innodb_rows_updated: initData,
   });
 
-  const name = 'mysql1';
+  const name = 'my1';
   const { data, error, loading } = useSubscription<
     MonitorPerfSubscription,
     MonitorPerfSubscriptionVariables

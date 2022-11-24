@@ -22,7 +22,6 @@ import {
   MdSignalWifiConnectedNoInternet0,
 } from 'react-icons/md';
 import { useRouter } from 'next/router';
-import { goToRealTime } from '../utils/goToRealTime';
 
 export const FIND_DBS = gql`
   query findDbs {
