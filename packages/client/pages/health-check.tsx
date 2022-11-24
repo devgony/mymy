@@ -1,4 +1,10 @@
-import { gql, useLazyQuery, useMutation, useQuery } from '@apollo/client';
+import {
+  gql,
+  useLazyQuery,
+  useMutation,
+  useQuery,
+  useReactiveVar,
+} from '@apollo/client';
 import { NextPage } from 'next';
 import { Fragment, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
@@ -15,6 +21,8 @@ import {
   MdOutlineSignalWifiConnectedNoInternet4,
   MdSignalWifiConnectedNoInternet0,
 } from 'react-icons/md';
+import { useRouter } from 'next/router';
+import { goToRealTime } from '../utils/goToRealTime';
 
 export const FIND_DBS = gql`
   query findDbs {
@@ -59,6 +67,9 @@ export const DELETE_DB = gql`
 `;
 
 const HealthCheck: NextPage = () => {
+  // const targetDb = useReactiveVar<string>(targetDbVar);
+  const targetDb = localStorage.getItem('targetDb');
+  const router = useRouter();
   const [ago, setAgo] = useState(0);
 
   const { register, getValues, setValue, handleSubmit, formState, watch } =
@@ -92,25 +103,10 @@ const HealthCheck: NextPage = () => {
     onCompleted: onCompletedDeleteDb,
   });
 
-  const onCompletedTestDb = (data: TestDbQuery) => {
-    // const { ok, error } = data.testDb;
-    // if (!ok) {
-    //   alert('Connection error');
-    //   return;
-    // }
-    // // setTestRequired(false);
-    // // SetTestd(false);
-    // setValue('status0', true);
-    // alert('Connection works!');
-  };
-  const [testDb, { data: dataTestDb }] = useLazyQuery(TEST_DB, {
-    onCompleted: onCompletedTestDb,
-  });
+  const [testDb, { data: dataTestDb }] = useLazyQuery(TEST_DB);
 
   const { data, error, refetch } = useQuery<FindDbsQuery>(FIND_DBS);
   const [adding, setAdding] = useState(false);
-  const [testd, SetTestd] = useState(true);
-  const [targetDb, setTargetDb] = useState('');
   const [testRequired, setTestRequired] = useState(true);
   const runTest = async () => {
     const [name, host, port, schema, username, password] = getValues([
@@ -220,6 +216,20 @@ const HealthCheck: NextPage = () => {
     setAgo(0);
   };
 
+  const goToRealTime = () => {
+    if (!targetDb) {
+      alert('Choose target db first');
+      return;
+    }
+    router.push({
+      pathname: '/real-time',
+    });
+  };
+
+  const getChecked = (dbName: string) => {
+    return dbName == targetDb;
+  };
+
   return (
     <div>
       <h1 className="mt-8 text-xl">HealthCheck</h1>
@@ -254,7 +264,8 @@ const HealthCheck: NextPage = () => {
               <input
                 type="radio"
                 name="chosen-db"
-                onClick={() => setTargetDb(db.name)}
+                checked={getChecked(db.name)}
+                onClick={() => localStorage.setItem('targetDb', db.name)}
               />
               <input
                 {...register(`name${i}`)}
@@ -347,10 +358,7 @@ const HealthCheck: NextPage = () => {
             </>
           )}
         </form>
-        <button
-          className="btn"
-          // onClick={() => gather({ variables: { input: { name: targetDb } } })}
-        >
+        <button className="btn" onClick={goToRealTime}>
           Go to Realtime
         </button>
       </div>
