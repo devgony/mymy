@@ -6,7 +6,7 @@ import {
   useReactiveVar,
 } from '@apollo/client';
 import { NextPage } from 'next';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
   CreateDbMutationVariables,
@@ -23,7 +23,7 @@ import {
 } from 'react-icons/md';
 import { useRouter } from 'next/router';
 
-export const FIND_DBS = gql`
+const FIND_DBS = gql`
   query findDbs {
     findDbs {
       dbs {
@@ -38,7 +38,7 @@ export const FIND_DBS = gql`
   }
 `;
 
-export const TEST_DB = gql`
+const TEST_DB = gql`
   query testDb($input: TestDbInput!) {
     testDb(input: $input) {
       ok
@@ -47,7 +47,7 @@ export const TEST_DB = gql`
   }
 `;
 
-export const CREATE_DB = gql`
+const CREATE_DB = gql`
   mutation createDb($input: CreateDbInput!) {
     createDb(input: $input) {
       ok
@@ -56,7 +56,7 @@ export const CREATE_DB = gql`
   }
 `;
 
-export const DELETE_DB = gql`
+const DELETE_DB = gql`
   mutation deleteDb($input: DeleteDbInput!) {
     deleteDb(input: $input) {
       ok
@@ -70,6 +70,9 @@ const HealthCheck: NextPage = () => {
   const targetDb = localStorage.getItem('targetDb');
   const router = useRouter();
   const [ago, setAgo] = useState(0);
+  // const localDelayStr = localStorage.getItem('delay');
+  // const localDelay = localDelayStr ? +localDelayStr : 30;
+  // const [delay, setDelay] = useState(localDelay);
 
   const { register, getValues, setValue, handleSubmit, formState, watch } =
     useForm<any>({
@@ -119,7 +122,7 @@ const HealthCheck: NextPage = () => {
       `password`,
     ]);
 
-    const a = await testDb({
+    const tested = await testDb({
       variables: {
         input: {
           name,
@@ -132,7 +135,7 @@ const HealthCheck: NextPage = () => {
       },
     });
 
-    if (!a?.data?.testDb.ok) {
+    if (!tested?.data?.testDb.ok) {
       alert('Connection error');
       return;
     }
@@ -170,12 +173,23 @@ const HealthCheck: NextPage = () => {
   };
 
   useEffect(() => {
-    setInterval(() => {
+    const interval = setInterval(() => {
       setAgo(cur => ++cur);
     }, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  const sleep = (ms: any) => new Promise(resolve => setTimeout(resolve, ms));
+  useEffect(() => {
+    runChecks();
+
+    const interval = setInterval(() => {
+      SetNumBad(0);
+      runChecks();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [data?.findDbs.dbs]);
 
   const runChecks = async () => {
     const indexes = data?.findDbs.dbs.map((_, i) => i);
@@ -186,15 +200,6 @@ const HealthCheck: NextPage = () => {
     }
   };
 
-  useEffect(() => {
-    runChecks();
-
-    setInterval(() => {
-      SetNumBad(0);
-      runChecks();
-    }, 10000);
-  }, [data?.findDbs.dbs]);
-
   const runCheck = async (i: number, manual: boolean) => {
     const [name, host, port, schema, username, password] = getValues([
       `name${i}`,
@@ -204,7 +209,6 @@ const HealthCheck: NextPage = () => {
       `username${i}`,
       `password${i}`,
     ]);
-    console.log(name, host, port, schema, username, password);
 
     const testDbResult = await testDb({
       variables: {
@@ -251,19 +255,52 @@ const HealthCheck: NextPage = () => {
     return dbName == targetDb;
   };
 
+  // const inputRef = useRef<HTMLInputElement>(null);
+  // const handleDelay = () => {
+  //   console.log(inputRef.current?.value);
+  //   if (inputRef.current) {
+  //     setDelay(+inputRef.current.value);
+  //     localStorage.setItem('delay', inputRef.current.value);
+  //   }
+  // };
+
   return (
     <div>
       <h1 className="mt-8 text-xl">HealthCheck</h1>
-      <h2 className="text-lg">Checked {ago} sec ago</h2>
-      <h2 className="text-lg">Total: {data?.findDbs.dbs.length}</h2>
-      <h2 className="text-lg">
-        Good: {data ? data?.findDbs.dbs.length - numBad : 0}
-      </h2>
-      <h2 className="text-lg">Bad: {numBad}</h2>
+      <div className="flex">
+        {/* <label className="ml-2 text-lg" htmlFor="delay"> */}
+        {/*   delay: */}
+        {/* </label> */}
+        {/* <input */}
+        {/*   key="delay" */}
+        {/*   className="bg-gray-300 w-24" */}
+        {/*   type="number" */}
+        {/*   value={delay} */}
+        {/*   ref={inputRef} */}
+        {/*   onChange={handleDelay} */}
+        {/* /> */}
+        <h2 className="text-lg">Checked {ago} sec ago</h2>
+      </div>
+      <div className="flex mb-2">
+        <div className="text-lg flex">
+          <div className="bg-violet-400 px-2">Total: </div>
+          <div className="mx-2">{data?.findDbs.dbs.length}</div>
+        </div>
+        <div className="text-lg flex ml-2">
+          <div className="bg-green-600 px-2">Good: </div>
+          <div className="mx-2">
+            {data ? data?.findDbs.dbs.length - numBad : 0}
+          </div>
+        </div>
+        <div className="text-lg flex ml-2">
+          <div className="bg-red-400 px-2">Bad: </div>
+          <div className="mx-2">{numBad}</div>
+        </div>
+      </div>
       <div className="flex flex-col h-96 items-center text-sm">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="w-full py-4 bg-gray-200 grid text-center gap-0.5 grid-cols-[60px,20px,13%,15%,13%,13%,13%,10%,60px,60px] justify-center"
+          className="w-full py-4 bg-violet-100 grid text-center gap-0.5 grid-cols-[60px,20px,13%,15%,13%,13%,13%,10%,60px,60px]"
         >
           <span>STATUS</span>
           <span />
@@ -290,7 +327,7 @@ const HealthCheck: NextPage = () => {
               <input
                 type="radio"
                 name="chosen-db"
-                checked={getChecked(db.name)}
+                defaultChecked={getChecked(db.name)}
                 onClick={() => localStorage.setItem('targetDb', db.name)}
               />
               <input
@@ -326,14 +363,14 @@ const HealthCheck: NextPage = () => {
               />
               <button
                 type="button"
-                className="px-2 py-0.5 text-white rounded text-xs bg-red-500"
+                className="btn"
                 onClick={() => runDeleteDb(db.name)}
               >
                 Delete
               </button>
               <button
                 type="button"
-                className="px-2 py-0.5 text-white rounded text-xs bg-green-700"
+                className="btn"
                 onClick={() => runCheck(i, true)}
               >
                 Test
@@ -357,10 +394,9 @@ const HealthCheck: NextPage = () => {
                 Test
               </button>
               <button
-                onClick={() => {}}
                 // todo - handle lazy tailwind
                 className={`px-2 py-0.5 text-white rounded text-xs ${
-                  testRequired ? 'bg-gray-400' : 'bg-green-700'
+                  testRequired ? 'bg-gray-400' : 'bg-violet-400'
                 }`}
                 disabled={testRequired}
                 type="submit"
