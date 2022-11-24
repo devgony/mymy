@@ -80,12 +80,6 @@ export class DbsService {
     password,
   }: TestDbInput): Promise<TestDbOutput> {
     try {
-      // const { host, port, database, username, password } =
-      //   await this.Dbs.findOne({ where: { name } });
-      // if (!host) {
-      //   return { ok: false, error: 'Connection does not exist' };
-      // }
-      // do sth
       const connection = await createConnection({
         type: 'mysql',
         name,
@@ -170,7 +164,6 @@ export class DbsService {
         data = { currentTime, ...result[0] };
       } else {
         data = { sessions: result };
-        // console.log(data);
       }
       this.pubSub.publish(subscriptionName, {
         [subscriptionName]: data,
