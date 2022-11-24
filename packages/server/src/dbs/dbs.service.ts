@@ -14,7 +14,6 @@ import { MonitorPerfInput } from './dtos/monitor-perf.dto';
 import { TestDbInput, TestDbOutput } from './dtos/test-db.dto';
 import { Db } from './entities/dbs.entity';
 
-
 @Injectable()
 export class DbsService {
   constructor(
@@ -95,7 +94,7 @@ export class DbsService {
         username,
         password,
         database: schema,
-        connectTimeout: 500
+        connectTimeout: 500,
       });
       if (!connection.isConnected) {
         return { ok: false, error: 'Connection failed' };
@@ -127,13 +126,15 @@ export class DbsService {
     try {
       const dbs = await this.dbs.find();
       if (!dbs) {
-        return { ok: false, error: 'db does not exist' }
+        return { ok: false, error: 'db does not exist' };
       }
-      const dbStats = await Promise.all(dbs.map(async db => {
-        const stat = await this.testDb(db);
-        return { ...db, stat: stat.ok ? 'Y' : 'N' }
-      }))
-      return { ok: true, dbStats }
+      const dbStats = await Promise.all(
+        dbs.map(async db => {
+          const stat = await this.testDb(db);
+          return { ...db, stat: stat.ok ? 'Y' : 'N' };
+        }),
+      );
+      return { ok: true, dbStats };
     } catch (error) {
       errLog(__filename, error);
       return { ok: false, error: 'Could not find db stats' };
@@ -154,7 +155,6 @@ export class DbsService {
   //     return { ok: false, error: 'Could not check health' };
   //   }
   // }
-
 
   async startMonitor(
     subscriptionName: string,
@@ -181,15 +181,18 @@ export class DbsService {
 
   async openConnection({ name }: MonitorPerfInput) {
     try {
-      const { host, port, schema, username, password } =
-        await this.dbs.findOne({ where: { name } });
+      const { host, port, schema, username, password } = await this.dbs.findOne(
+        { where: { name } },
+      );
       if (!host) {
         new Error('Could not find link');
       }
       // do sth
       const connectionManager = getConnectionManager();
-      if (connectionManager.has(name)) {
-        const connection = connectionManager.get(name);
+
+      const connName = `realtime-${name}`;
+      if (connectionManager.has(connName)) {
+        const connection = connectionManager.get(connName);
         console.log('reuse');
         return Promise.resolve(
           connection.isConnected ? connection : connection.connect(),
@@ -197,13 +200,13 @@ export class DbsService {
       }
       const connection = await createConnection({
         type: 'mysql',
-        name,
+        name: connName,
         host,
         port,
         username,
         password,
         database: schema,
-        connectTimeout: 500
+        connectTimeout: 500,
       });
 
       console.log('newConnection');
