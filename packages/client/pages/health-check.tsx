@@ -66,7 +66,7 @@ export const DELETE_DB = gql`
 `;
 
 const HealthCheck: NextPage = () => {
-  // const targetDb = useReactiveVar<string>(targetDbVar);
+  const [numBad, SetNumBad] = useState(0);
   const targetDb = localStorage.getItem('targetDb');
   const router = useRouter();
   const [ago, setAgo] = useState(0);
@@ -102,7 +102,9 @@ const HealthCheck: NextPage = () => {
     onCompleted: onCompletedDeleteDb,
   });
 
-  const [testDb, { data: dataTestDb }] = useLazyQuery(TEST_DB);
+  const [testDb, { data: dataTestDb }] = useLazyQuery(TEST_DB, {
+    fetchPolicy: 'no-cache',
+  });
 
   const { data, error, refetch } = useQuery<FindDbsQuery>(FIND_DBS);
   const [adding, setAdding] = useState(false);
@@ -173,15 +175,27 @@ const HealthCheck: NextPage = () => {
     }, 1000);
   }, []);
 
+  const sleep = (ms: any) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const runChecks = async () => {
+    const indexes = data?.findDbs.dbs.map((_, i) => i);
+    if (indexes) {
+      for await (let index of indexes) {
+        await runCheck(index, false);
+      }
+    }
+  };
+
   useEffect(() => {
+    runChecks();
+
     setInterval(() => {
-      data?.findDbs.dbs.forEach((_, i) => {
-        runCheck(i, false);
-      });
+      SetNumBad(0);
+      runChecks();
     }, 10000);
   }, [data?.findDbs.dbs]);
 
-  const runCheck = async (i: number, alertable: boolean) => {
+  const runCheck = async (i: number, manual: boolean) => {
     const [name, host, port, schema, username, password] = getValues([
       `name${i}`,
       `host${i}`,
@@ -190,6 +204,7 @@ const HealthCheck: NextPage = () => {
       `username${i}`,
       `password${i}`,
     ]);
+    console.log(name, host, port, schema, username, password);
 
     const testDbResult = await testDb({
       variables: {
@@ -205,14 +220,21 @@ const HealthCheck: NextPage = () => {
     });
 
     if (!testDbResult?.data?.testDb.ok) {
-      alertable ? alert('Connection error') : null;
+      if (manual) {
+        alert('Connection error');
+      } else {
+        SetNumBad(cur => ++cur);
+        setAgo(0);
+      }
       setValue(`status${i}`, false);
-      setAgo(0);
       return;
     }
-    alertable ? alert('Connection works!') : null;
+    if (manual) {
+      alert('Connection works!');
+    } else {
+      setAgo(0);
+    }
     setValue(`status${i}`, true);
-    setAgo(0);
   };
 
   const goToRealTime = () => {
@@ -233,6 +255,11 @@ const HealthCheck: NextPage = () => {
     <div>
       <h1 className="mt-8 text-xl">HealthCheck</h1>
       <h2 className="text-lg">Checked {ago} sec ago</h2>
+      <h2 className="text-lg">Total: {data?.findDbs.dbs.length}</h2>
+      <h2 className="text-lg">
+        Good: {data ? data?.findDbs.dbs.length - numBad : 0}
+      </h2>
+      <h2 className="text-lg">Bad: {numBad}</h2>
       <div className="flex flex-col h-96 items-center text-sm">
         <form
           onSubmit={handleSubmit(onSubmit)}

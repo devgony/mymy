@@ -13,7 +13,6 @@ import {
 } from '../generated/graphql';
 import { AgGridReact } from 'ag-grid-react';
 import { useRouter } from 'next/router';
-import { goToRealTime } from '../utils/goToRealTime';
 
 const MONITOR_PERF = gql`
   subscription monitorPerf($input: MonitorPerfInput!) {
