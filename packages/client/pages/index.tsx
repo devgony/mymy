@@ -14,7 +14,7 @@ const Home: NextPage = () => {
           HealthCheck
         </div>
         <div className="bg-gray-200 h-full rounded-b-lg flex flex-col justify-center shadow-2xl">
-          <p>Total ?? DB</p>
+          <p>Total ??? DB</p>
           <p>Good: 10</p>
           <p>Bad: 1</p>
         </div>
@@ -27,7 +27,7 @@ const Home: NextPage = () => {
           RealTime
         </div>
         <div className="bg-gray-200 h-full rounded-b-lg flex flex-col justify-center shadow-2xl">
-          <p>current: {targetDb}</p>
+          <p>currentDB: {targetDb}</p>
         </div>
       </section>
     </div>

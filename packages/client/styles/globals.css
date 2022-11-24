@@ -2,5 +2,5 @@
 @tailwind components;
 @tailwind utilities;
 .btn {
-  @apply bg-blue-500 hover:bg-blue-700 text-white py-0.5 px-2 rounded-full; 
+  @apply px-2 py-2 text-white rounded text-xs bg-violet-400 hover:bg-violet-600; 
 }
