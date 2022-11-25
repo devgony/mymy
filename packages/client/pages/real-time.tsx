@@ -13,6 +13,9 @@ import {
 } from '../generated/graphql';
 import { AgGridReact } from 'ag-grid-react';
 import { useRouter } from 'next/router';
+import { targetDbVar } from '../apollo-client';
+import { Helmet } from 'react-helmet';
+import { TITLE } from '../utils/const';
 
 const MONITOR_PERF = gql`
   subscription monitorPerf($input: MonitorPerfInput!) {
@@ -91,14 +94,14 @@ type IChartData = {
 };
 
 const RealTime: NextPage = () => {
-  const targetDb = localStorage.getItem('targetDb');
+  const targetDb = useReactiveVar(targetDbVar);
   const router = useRouter();
   useEffect(() => {
     if (!targetDb) {
-      alert('Choose target db first');
       router.push({
         pathname: '/health-check',
       });
+      alert('Choose target DB first');
     }
   }, []);
   const initData = Array(5).fill({ x: '00:00:00', y: 0 }) as [
@@ -113,19 +116,17 @@ const RealTime: NextPage = () => {
     Innodb_rows_updated: initData,
   });
 
-  const name = 'my1';
   const { data, error, loading } = useSubscription<
     MonitorPerfSubscription,
     MonitorPerfSubscriptionVariables
-  >(MONITOR_PERF, { variables: { input: { name } } });
+  >(MONITOR_PERF, { variables: { input: { name: targetDb } } });
 
   const { data: dataSessions } = useSubscription<
     MonitorSessionsSubscription,
     MonitorSessionsSubscriptionVariables
-  >(MONITOR_SESSIONS, { variables: { input: { name } } });
+  >(MONITOR_SESSIONS, { variables: { input: { name: targetDb } } });
 
   useEffect(() => {
-    // console.log("workd")
     if (data) {
       const input = data.monitorPerf;
       setChartData(prev => {
@@ -172,10 +173,11 @@ const RealTime: NextPage = () => {
   );
 
   return (
-    <div className="h-full">
-      {/* <Helmet> */}
-      {/*   <title>{`Dashboard | ${TITLE}`}</title> */}
-      {/* </Helmet> */}
+    <div className="h-full flex flex-col items-center">
+      <Helmet>
+        <title>{`RealTime | ${TITLE}`}</title>
+      </Helmet>
+      <div className="mt-4 mb-6 text-2xl">{targetDb}</div>
       <div className="bg-gray-500 grid grid-cols-3 gap-0.5 text-xs">
         {Object.entries(chartData).map(([k, v]) => (
           <div key={k} className="bg-red-50 flex flex-col items-center">

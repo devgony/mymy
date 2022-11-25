@@ -22,6 +22,9 @@ import {
   MdSignalWifiConnectedNoInternet0,
 } from 'react-icons/md';
 import { useRouter } from 'next/router';
+import { targetDbVar } from '../apollo-client';
+import { TARGET_DB, TITLE } from '../utils/const';
+import { Helmet } from 'react-helmet';
 
 const FIND_DBS = gql`
   query findDbs {
@@ -67,7 +70,7 @@ const DELETE_DB = gql`
 
 const HealthCheck: NextPage = () => {
   const [numBad, SetNumBad] = useState(0);
-  const targetDb = localStorage.getItem('targetDb');
+  const targetDb = useReactiveVar(targetDbVar);
   const router = useRouter();
   const [ago, setAgo] = useState(0);
   // const localDelayStr = localStorage.getItem('delay');
@@ -243,7 +246,7 @@ const HealthCheck: NextPage = () => {
 
   const goToRealTime = () => {
     if (!targetDb) {
-      alert('Choose target db first');
+      alert('Choose target DB first');
       return;
     }
     router.push({
@@ -256,6 +259,7 @@ const HealthCheck: NextPage = () => {
   };
 
   // const inputRef = useRef<HTMLInputElement>(null);
+
   // const handleDelay = () => {
   //   console.log(inputRef.current?.value);
   //   if (inputRef.current) {
@@ -266,6 +270,9 @@ const HealthCheck: NextPage = () => {
 
   return (
     <div>
+      <Helmet>
+        <title>{`HealthCheck | ${TITLE}`}</title>
+      </Helmet>
       <h1 className="mt-8 text-xl">HealthCheck</h1>
       <div className="flex">
         {/* <label className="ml-2 text-lg" htmlFor="delay"> */}
@@ -300,7 +307,7 @@ const HealthCheck: NextPage = () => {
       <div className="flex flex-col h-96 items-center text-sm">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="w-full py-4 bg-violet-100 grid text-center gap-0.5 grid-cols-[60px,20px,13%,15%,13%,13%,13%,10%,60px,60px]"
+          className="w-full pl-2 pt-4 pb-2 mb-2 grid text-center gap-0.5 grid-cols-[60px,20px,13%,15%,13%,13%,13%,10%,60px,60px] bg-violet-100 shadow-2xl justify-center "
         >
           <span>STATUS</span>
           <span />
@@ -314,7 +321,10 @@ const HealthCheck: NextPage = () => {
           <span></span>
           {data?.findDbs.dbs.map((db, i) => (
             <Fragment key={i}>
-              <div className="flex justify-center" {...register(`status${i}`)}>
+              <div
+                className="flex justify-center items-center"
+                {...register(`status${i}`)}
+              >
                 {watch(`status${i}`) ? (
                   <ImConnection size={30} color="green" />
                 ) : (
@@ -324,12 +334,17 @@ const HealthCheck: NextPage = () => {
                   />
                 )}
               </div>
-              <input
-                type="radio"
-                name="chosen-db"
-                defaultChecked={getChecked(db.name)}
-                onClick={() => localStorage.setItem('targetDb', db.name)}
-              />
+              <div className="flex justify-center items-center">
+                <input
+                  type="radio"
+                  name="chosen-db"
+                  defaultChecked={getChecked(db.name)}
+                  onClick={() => {
+                    targetDbVar(db.name);
+                    localStorage.setItem(TARGET_DB, db.name);
+                  }}
+                />
+              </div>
               <input
                 {...register(`name${i}`)}
                 value={db.name}

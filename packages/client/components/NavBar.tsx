@@ -1,10 +1,11 @@
 import { useReactiveVar } from '@apollo/client';
 import { NextPage } from 'next';
 import Link from 'next/link';
-import { authTokenVar, isLoggedInVar } from '../apollo-client';
+import { authTokenVar, isLoggedInVar, targetDbVar } from '../apollo-client';
 import { LOCALSTORAGE_TOKEN } from '../utils/const';
 import { GiDolphin } from 'react-icons/gi';
 import { RiHandHeartFill } from 'react-icons/ri';
+import { useRouter } from 'next/router';
 
 const NavBar: NextPage = () => {
   const isLoggedIn = useReactiveVar(isLoggedInVar);
@@ -13,6 +14,18 @@ const NavBar: NextPage = () => {
     authTokenVar(null);
     isLoggedInVar(false);
   };
+
+  const targetDb = useReactiveVar(targetDbVar);
+  const router = useRouter();
+  const goToRealTime = () => {
+    if (!targetDb) {
+      alert('Choose target DB first');
+      router.push({ pathname: '/health-check' });
+      return;
+    }
+    router.push({ pathname: '/real-time' });
+  };
+
   return (
     <div className="w-full flex h-12 justify-between items-center bg-violet-400 text-gray-100 font-bold">
       <Link href="/">
@@ -27,9 +40,9 @@ const NavBar: NextPage = () => {
         <Link href="/health-check">
           <a>HEALTH CHECK</a>
         </Link>
-        <Link href="/real-time">
+        <div className="hover:cursor-pointer" onClick={goToRealTime}>
           <a>REAL TIME</a>
-        </Link>
+        </div>
         {/* <Link href="/admin"> */}
         {/*   <a>ADMIN</a> */}
         {/* </Link> */}

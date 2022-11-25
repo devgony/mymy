@@ -1,5 +1,6 @@
 import { gql, useMutation, useQuery } from '@apollo/client';
 import type { InferGetServerSidePropsType, NextPage } from 'next';
+import { Helmet } from 'react-helmet';
 import { useForm } from 'react-hook-form';
 import client, { authTokenVar, isLoggedInVar } from '../apollo-client';
 import {
@@ -7,7 +8,7 @@ import {
   LoginMutation,
   LoginMutationVariables,
 } from '../generated/graphql';
-import { LOCALSTORAGE_TOKEN } from '../utils/const';
+import { LOCALSTORAGE_TOKEN, TITLE } from '../utils/const';
 
 const LOGIN = gql`
   mutation login($input: LoginInput!) {
@@ -50,6 +51,9 @@ const Login: NextPage = () => {
   };
   return (
     <section className="h-full flex justify-center items-center ">
+      <Helmet>
+        <title>{`Login | ${TITLE}`}</title>
+      </Helmet>
       <form
         className="flex flex-col w-80 h-64 shadow-2xl rounded-b-lg"
         onSubmit={handleSubmit(onSubmit)}

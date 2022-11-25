@@ -10,7 +10,7 @@ import {
   makeVar,
   split,
 } from '@apollo/client';
-import { LOCALSTORAGE_TOKEN } from './utils/const';
+import { LOCALSTORAGE_TOKEN, TARGET_DB } from './utils/const';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { getMainDefinition } from '@apollo/client/utilities';
@@ -21,6 +21,10 @@ const token =
     : false;
 export const isLoggedInVar = makeVar(Boolean(token));
 export const authTokenVar = makeVar(token);
+
+const targetDb =
+  typeof window !== 'undefined' ? localStorage.getItem(TARGET_DB) : '';
+export const targetDbVar = makeVar(targetDb || '');
 
 const httpLink = createHttpLink({
   // uri: 'http://localhost:4000/graphql',
