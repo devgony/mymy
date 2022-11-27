@@ -177,10 +177,10 @@ const RealTime: NextPage = () => {
       <Helmet>
         <title>{`RealTime | ${TITLE}`}</title>
       </Helmet>
-      <div className="mt-4 mb-6 text-2xl">{targetDb}</div>
-      <div className="bg-gray-500 grid grid-cols-3 gap-0.5 text-xs">
+      <div className="mt-4 mb-6 text-2xl font-bold">current DB: {targetDb}</div>
+      <div className="bg-gray-400 grid grid-cols-3 gap-0.5 text-xs">
         {Object.entries(chartData).map(([k, v]) => (
-          <div key={k} className="bg-red-50 flex flex-col items-center">
+          <div key={k} className="bg-white flex flex-col items-center">
             <h2>{k}</h2>
             <VictoryChart
               domain={{ y: [getMin(v), getMax(v)] }}
@@ -197,7 +197,7 @@ const RealTime: NextPage = () => {
       </div>
 
       <div
-        className="mt-2 ag-theme-alpine"
+        className="mt-8 ag-theme-alpine"
         style={{ height: 600, width: '100%' }}
       >
         <AgGridReact
