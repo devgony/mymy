@@ -92,7 +92,7 @@ const Home: NextPage = () => {
         <title>{`Home | ${TITLE}`}</title>
       </Helmet>
       <section
-        className="w-1/3 h-24 hover:cursor-pointer hover:shadow-2xl"
+        className="w-1/3 h-24 ml-32 hover:cursor-pointer hover:shadow-2xl"
         onClick={() => router.push({ pathname: 'health-check' })}
       >
         <div className="bg-violet-400 w-full rounded-t-lg text-gray-100">
@@ -105,7 +105,7 @@ const Home: NextPage = () => {
         </div>
       </section>
       <section
-        className="w-1/3 h-24 hover:cursor-pointer hover:shadow-2xl"
+        className="w-1/3 h-24 mr-32 hover:cursor-pointer hover:shadow-2xl"
         onClick={goToRealTime}
       >
         <div className="bg-violet-400 w-full rounded-t-lg text-gray-100">

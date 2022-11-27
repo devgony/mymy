@@ -4,3 +4,9 @@
 .btn {
   @apply px-2 py-2 text-white rounded text-xs bg-violet-400 hover:bg-violet-600; 
 }
+
+@layer utilities {
+  .striped div:nth-child(even) {
+    @apply bg-gray-100
+  }
+}

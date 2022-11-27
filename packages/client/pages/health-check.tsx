@@ -273,7 +273,7 @@ const HealthCheck: NextPage = () => {
       <Helmet>
         <title>{`HealthCheck | ${TITLE}`}</title>
       </Helmet>
-      <h1 className="mt-8 text-xl">HealthCheck</h1>
+      <h1 className="mt-4 text-xl text-center font-bold mb-2">HealthCheck</h1>
       <div className="flex">
         {/* <label className="ml-2 text-lg" htmlFor="delay"> */}
         {/*   delay: */}
@@ -286,29 +286,27 @@ const HealthCheck: NextPage = () => {
         {/*   ref={inputRef} */}
         {/*   onChange={handleDelay} */}
         {/* /> */}
-        <h2 className="text-lg">Checked {ago} sec ago</h2>
-      </div>
-      <div className="flex mb-2">
-        <div className="text-lg flex">
-          <div className="bg-violet-400 px-2">Total: </div>
-          <div className="mx-2">{data?.findDbs.dbs.length}</div>
-        </div>
-        <div className="text-lg flex ml-2">
-          <div className="bg-green-600 px-2">Good: </div>
-          <div className="mx-2">
-            {data ? data?.findDbs.dbs.length - numBad : 0}
+        <div className="flex mb-2 w-full justify-center">
+          <div className="text-lg flex">
+            <div className="bg-gray-400 px-2 text-gray-50">Total: </div>
+            <div className="mx-2">{data?.findDbs.dbs.length}</div>
+          </div>
+          <div className="text-lg flex ml-2">
+            <div className="bg-green-600 px-2 text-gray-50">Good: </div>
+            <div className="mx-2">
+              {data ? data?.findDbs.dbs.length - numBad : 0}
+            </div>
+          </div>
+          <div className="text-lg flex ml-2">
+            <div className="bg-red-400 px-2 text-gray-50">Bad: </div>
+            <div className="mx-2">{numBad}</div>
           </div>
         </div>
-        <div className="text-lg flex ml-2">
-          <div className="bg-red-400 px-2">Bad: </div>
-          <div className="mx-2">{numBad}</div>
-        </div>
       </div>
+      <h2 className="text-sm">Checked {ago} sec ago</h2>
       <div className="flex flex-col h-96 items-center text-sm">
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="w-full pl-2 pt-4 pb-2 mb-2 grid text-center gap-0.5 grid-cols-[60px,20px,13%,15%,13%,13%,13%,10%,60px,60px] bg-violet-100 shadow-2xl justify-center "
-        >
+        {/* <div className="w-full h-8 bg-violet-100 flex items-center"></div> */}
+        <div className="w-full pl-2 pt-2 pb-2 grid text-center gap-0.5 grid-cols-[60px,20px,13%,15%,13%,13%,13%,10%,60px,60px] bg-violet-100 justify-center">
           <span>STATUS</span>
           <span />
           <span>NAME</span>
@@ -319,10 +317,15 @@ const HealthCheck: NextPage = () => {
           <span>PASSWORD</span>
           <span></span>
           <span></span>
+        </div>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="mb-4 w-full pl-2 pb-2 grid gap-0.5 bg-gray-100 justify-center shadow-xl text-center grid-cols-[60px,20px,13%,15%,13%,13%,13%,10%,60px,60px]"
+        >
           {data?.findDbs.dbs.map((db, i) => (
             <Fragment key={i}>
               <div
-                className="flex justify-center items-center"
+                className="flex justify-center items-center "
                 {...register(`status${i}`)}
               >
                 {watch(`status${i}`) ? (
