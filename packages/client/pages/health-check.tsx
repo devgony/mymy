@@ -69,7 +69,7 @@ const DELETE_DB = gql`
 `;
 
 const HealthCheck: NextPage = () => {
-  const [numBad, SetNumBad] = useState(0);
+  const [numDown, SetNumDown] = useState(0);
   const targetDb = useReactiveVar(targetDbVar);
   const router = useRouter();
   const [ago, setAgo] = useState(0);
@@ -187,7 +187,7 @@ const HealthCheck: NextPage = () => {
     runChecks();
 
     const interval = setInterval(() => {
-      SetNumBad(0);
+      SetNumDown(0);
       runChecks();
     }, 30000);
 
@@ -230,7 +230,7 @@ const HealthCheck: NextPage = () => {
       if (manual) {
         alert('Connection error');
       } else {
-        SetNumBad(cur => ++cur);
+        SetNumDown(cur => ++cur);
         setAgo(0);
       }
       setValue(`status${i}`, false);
@@ -292,14 +292,14 @@ const HealthCheck: NextPage = () => {
             <div className="mx-2">{data?.findDbs.dbs.length}</div>
           </div>
           <div className="text-lg flex ml-2">
-            <div className="bg-green-600 px-2 text-gray-50">Good: </div>
+            <div className="bg-green-600 px-2 text-gray-50">Up: </div>
             <div className="mx-2">
-              {data ? data?.findDbs.dbs.length - numBad : 0}
+              {data ? data?.findDbs.dbs.length - numDown : 0}
             </div>
           </div>
           <div className="text-lg flex ml-2">
-            <div className="bg-red-400 px-2 text-gray-50">Bad: </div>
-            <div className="mx-2">{numBad}</div>
+            <div className="bg-red-400 px-2 text-gray-50">Down: </div>
+            <div className="mx-2">{numDown}</div>
           </div>
         </div>
       </div>

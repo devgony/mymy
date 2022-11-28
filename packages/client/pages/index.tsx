@@ -34,7 +34,7 @@ const TEST_DB = gql`
 const Home: NextPage = () => {
   const targetDb = useReactiveVar(targetDbVar);
   const router = useRouter();
-  const [numBad, setNumBad] = useState(0);
+  const [numDown, setNumDown] = useState(0);
 
   const { data, error, refetch } = useQuery<FindDbsQuery>(FIND_DBS);
   const [testDb, { data: dataTestDb }] = useLazyQuery(TEST_DB, {
@@ -42,7 +42,7 @@ const Home: NextPage = () => {
   });
 
   const numDb = data?.findDbs.dbs.length;
-  const numGood = numDb ? numDb - numBad : 0;
+  const numUp = numDb ? numDb - numDown : 0;
 
   const runChecks = async () => {
     if (data) {
@@ -69,7 +69,7 @@ const Home: NextPage = () => {
     });
 
     if (!testDbResult?.data?.testDb.ok) {
-      setNumBad(cur => ++cur);
+      setNumDown(cur => ++cur);
     }
   };
 
@@ -100,8 +100,8 @@ const Home: NextPage = () => {
         </div>
         <div className="bg-gray-200 h-full rounded-b-lg flex flex-col justify-center shadow-2xl">
           <p>Total DB: {numDb}</p>
-          <p>Good: {numGood}</p>
-          <p>Bad: {numBad}</p>
+          <p>Up: {numUp}</p>
+          <p>Down: {numDown}</p>
         </div>
       </section>
       <section
