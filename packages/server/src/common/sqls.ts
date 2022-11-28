@@ -56,4 +56,12 @@ WHERE  1=1
     AND lower(a.state) not like '%queueing%'
     AND lower(a.state) not like '%slave has read all relay log%'
     AND lower(a.state) not like '%reading event from the relay log%'
+    AND a.id <> connection_id()
+    AND SUBSTRING_INDEX(host,':',1) <> ( 
+      Select SUBSTRING_INDEX(host,':',1)
+      From information_schema.processlist 
+      WHERE ID = connection_id()
+      LIMIT 1
+    )
+    AND a.user <> 'event_scheduler'
 order by a.time desc`;
